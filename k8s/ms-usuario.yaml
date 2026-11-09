@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-usuario-auth
+type: Opaque
+stringData:
+  password: labusuario123
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-usuario
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: postgres-usuario}
+  template:
+    metadata:
+      labels: {app: postgres-usuario}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - {name: POSTGRES_DB, value: usuariodb}
+            - {name: POSTGRES_USER, value: usuariouser}
+            - name: POSTGRES_PASSWORD
+              valueFrom: {secretKeyRef: {name: postgres-usuario-auth, key: password}}
+          ports: [{containerPort: 5432}]
+          readinessProbe:
+            tcpSocket: {port: 5432}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {memory: 512Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-usuario
+spec:
+  selector: {app: postgres-usuario}
+  ports: [{port: 5432, targetPort: 5432}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-usuario
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: ms-usuario}
+  template:
+    metadata:
+      labels: {app: ms-usuario}
+    spec:
+      containers:
+        - name: ms-usuario
+          image: viniciuswamser/ms-usuario:1.0.0
+          ports: [{containerPort: 8082}]
+          env:
+            - {name: SPRING_DATASOURCE_URL, value: "jdbc:postgresql://postgres-usuario:5432/usuariodb"}
+            - {name: SPRING_DATASOURCE_USERNAME, value: usuariouser}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom: {secretKeyRef: {name: postgres-usuario-auth, key: password}}
+          readinessProbe:
+            tcpSocket: {port: 8082}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {memory: 640Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-usuario
+spec:
+  selector: {app: ms-usuario}
+  ports: [{port: 8082, targetPort: 8082}]
