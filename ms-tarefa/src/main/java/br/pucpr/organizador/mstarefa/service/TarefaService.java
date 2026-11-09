@@ -2,6 +2,7 @@ package br.pucpr.organizador.mstarefa.service;
 
 import br.pucpr.organizador.mstarefa.client.UsuarioClient;
 import br.pucpr.organizador.mstarefa.domain.Tarefa;
+import br.pucpr.organizador.mstarefa.messaging.TarefaCriadaPublisher;
 import br.pucpr.organizador.mstarefa.repository.TarefaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,14 @@ public class TarefaService {
 
     private final TarefaRepository repository;
     private final UsuarioClient usuarioClient;
+    private final TarefaCriadaPublisher publisher;
 
-    public TarefaService(TarefaRepository repository, UsuarioClient usuarioClient) {
+    public TarefaService(TarefaRepository repository,
+                         UsuarioClient usuarioClient,
+                         TarefaCriadaPublisher publisher) {
         this.repository = repository;
         this.usuarioClient = usuarioClient;
+        this.publisher = publisher;
     }
 
     public List<Tarefa> listar() {
@@ -30,6 +35,8 @@ public class TarefaService {
                     "Usuario " + tarefa.getUsuarioId() + " nao existe");
         }
         tarefa.setId(null);
-        return repository.save(tarefa);
+        Tarefa salva = repository.save(tarefa);
+        publisher.publicar(salva);
+        return salva;
     }
 }
