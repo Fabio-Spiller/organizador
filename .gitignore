@@ -1,0 +1,10 @@
+target/
+*.class
+__pycache__/
+*.pyc
+.venv/
+venv/
+.idea/
+*.iml
+.vscode/
+.DS_Store
