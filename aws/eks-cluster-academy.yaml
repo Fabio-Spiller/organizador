@@ -1,0 +1,18 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: mytracker
+  region: us-east-1
+
+iam:
+  serviceRoleARN: "arn:aws:iam::127791573497:role/c222296a5607975l18257178t1w127791-LabEksClusterRole-BWMhKUAJ02fR"
+
+managedNodeGroups:
+  - name: mytracker-nodes
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 2
+    iam:
+      instanceRoleARN: "arn:aws:iam::127791573497:role/c222296a5607975l18257178t1w127791573-LabEksNodeRole-mYYj00W1Y7sR"
